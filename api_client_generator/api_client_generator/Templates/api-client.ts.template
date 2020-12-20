@@ -1,0 +1,95 @@
+﻿/*
+ * Auto-generated api client for typescript
+ * any modifications to this file will be lost when regenerated
+ */
+
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { ConfigurationProvider } from '../provider/configuration.provider';
+import { timeout, retry, map } from 'rxjs/operators';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiClient {
+
+  private baseUrl: string;
+  private timeout: number;
+
+  constructor(
+    private http: HttpClient,
+    private configProvider: ConfigurationProvider,
+  ) {
+    this.baseUrl = this.configProvider.configuration == null ? '' : this.configProvider.configuration.Api.Url;
+    this.timeout = this.configProvider.configuration == null ? 0 : this.configProvider.configuration.HttpClientTimeOut;
+  }
+
+  // ======= API CALLS =====================================
+
+  {{#each areas}}
+  public {{name}} = {
+    {{#each controllers}}
+    {{name}}: {
+      {{#each actions}}
+      {{name}}: ({{#each params}}{{name}}{{#if isOptional}}?{{/if}}: {{type}}{{#unless @last}}, {{/unless}}{{/each}}) => this.{{verb}}<{{returnType}}>(`{{route}}`{{#if hasPayload}}, {{payload}}{{/if}}),
+      {{/each}}
+    },
+    {{/each}}
+  };
+  {{#unless @last}}
+
+  {{/unless}}
+  {{/each}}
+
+  // ======= CORE METHODS ==================================
+
+  private get<T>(route: string): Observable<T> {
+    return this.http
+      .get<T>(`${this.baseUrl}/${route}`, {
+        observe: 'response',
+      })
+      .pipe(
+        timeout(this.timeout),
+        retry(3),
+        map(response => !!response.ok ? response.body : null)
+      );
+  }
+
+  private post<T>(route: string, payload: any): Observable<T> {
+    return this.http
+      .post<T>(`${this.baseUrl}/${route}`, payload, {
+        observe: 'response',
+      })
+      .pipe(
+        timeout(this.timeout),
+        retry(3),
+        map(response => !!response.ok ? response.body : null)
+      );
+  }
+
+  private put<T>(route: string, payload: any): Observable<T> {
+    return this.http
+      .put<T>(`${this.baseUrl}/${route}`, payload, {
+        observe: 'response',
+      })
+      .pipe(
+        timeout(this.timeout),
+        retry(3),
+        map(response => !!response.ok ? response.body : null)
+      );
+  }
+};
+
+// ========= MODELS ========================================
+
+{{#each models}}
+export interface {{name}} {
+  {{#each properties}}
+  {{name}}{{#if isOptional}}?{{/if}}: {{type}};
+  {{/each}}
+}
+{{#unless @last}}
+
+{{/unless}}
+{{/each}}
